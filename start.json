@@ -1,0 +1,21 @@
+{
+  "1231": {
+    "id": 1,
+    "name": "asd",
+    "coordinates": {
+      "x": 2,
+      "y": 43
+    },
+    "creationDate": "2025-04-11",
+    "oscarsCount": 4,
+    "totalBoxOffice": 12,
+    "tagline": null,
+    "genre": "HORROR",
+    "director": {
+      "name": "3",
+      "birthday": null,
+      "weight": 12,
+      "nationality": "THAILAND"
+    }
+  }
+}
