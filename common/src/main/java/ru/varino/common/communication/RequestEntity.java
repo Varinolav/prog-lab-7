@@ -9,12 +9,14 @@ public class RequestEntity implements Serializable {
     private final String command;
     private final String params;
     private Object body;
+    private Object payload;
 
 
     private RequestEntity(String command, String params) {
         this.command = command;
         this.params = params;
     }
+
 
     /**
      * добавить тело запроса
@@ -27,12 +29,21 @@ public class RequestEntity implements Serializable {
         return this;
     }
 
+    public RequestEntity payload(Object payload) {
+        this.payload = payload;
+        return this;
+    }
+
     public String getCommand() {
         return command;
     }
 
     public String getParams() {
         return params;
+    }
+
+    public Object getPayload() {
+        return payload;
     }
 
     /**

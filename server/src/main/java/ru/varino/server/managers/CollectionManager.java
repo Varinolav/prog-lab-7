@@ -1,6 +1,8 @@
 package ru.varino.server.managers;
 
 import ru.varino.common.models.Movie;
+import ru.varino.server.db.DatabaseMap;
+import ru.varino.server.db.service.MovieService;
 
 import java.util.*;
 
@@ -9,18 +11,21 @@ import java.util.*;
  * Класс для работы с коллекцией
  */
 public class CollectionManager {
-    private Hashtable<Integer, Movie> collection;
+    private Map<Integer, Movie> collection;
     private final Date creationDate;
+    private final MovieService movieService;
 
-    public CollectionManager() {
-        collection = new Hashtable<Integer, Movie>();
+    public CollectionManager(MovieService movieService) {
+        collection = new DatabaseMap(movieService);
         creationDate = new Date();
+        this.movieService = movieService;
     }
-    public Hashtable<Integer, Movie> getCollection() {
+
+    public Map<Integer, Movie> getCollection() {
         return collection;
     }
 
-    public void setCollection(Hashtable<Integer, Movie> collection) {
+    public void setCollection(Map<Integer, Movie> collection) {
         this.collection = collection;
     }
 
@@ -45,7 +50,7 @@ public class CollectionManager {
      * @param movies коллекция
      * @return форматированный вывод
      */
-    public static String formatMovies(Hashtable<Integer, Movie> movies) {
+    public static String formatMovies(Map<Integer, Movie> movies) {
         StringBuilder sb = new StringBuilder();
         sb.append("{\n");
 
@@ -91,6 +96,8 @@ public class CollectionManager {
     public Movie getElementById(Integer id) {
         return collection.get(id);
     }
+
+    public void load(){}
 }
 
 

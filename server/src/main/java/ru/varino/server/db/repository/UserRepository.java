@@ -1,4 +1,4 @@
-package ru.varino.db.repository;
+package ru.varino.server.db.repository;
 
 import ru.varino.common.models.User;
 
@@ -13,6 +13,8 @@ public interface UserRepository {
     Optional<User> findByUsername(String username);
 
     boolean checkPassword(User user, String password);
+
+    Optional<User> findByUsernamePassword(String username, String password);
 
 
 }

@@ -17,6 +17,7 @@ public class RunClient {
         Console console = new StandartConsole();
         RecursionDequeHandler recursionDequeHandler = new RecursionDequeHandler();
         ScannerManager scannerManager = new ScannerManager();
+        scannerManager.setCurrentScanner(scanner);
         UserService userService = new UserService(scanner, console, recursionDequeHandler, scannerManager);
         try {
             Client client = new Client(InetAddress.getByName(ServerConfiguration.HOST), ServerConfiguration.PORT, userService, console, recursionDequeHandler, scannerManager);

@@ -1,4 +1,4 @@
-package ru.varino.db;
+package ru.varino.server.db;
 
 public class DatabaseConfiguration {
     public static String URL = "jdbc:postgresql://localhost:5432/postgres";

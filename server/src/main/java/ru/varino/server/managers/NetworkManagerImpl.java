@@ -4,8 +4,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.varino.common.communication.RequestEntity;
 import ru.varino.common.communication.ResponseEntity;
+import ru.varino.common.models.User;
 import ru.varino.common.utility.*;
-import ru.varino.db.DatabaseManager;
+import ru.varino.server.db.DatabaseManager;
+import ru.varino.server.db.service.MovieService;
+import ru.varino.server.db.service.UserService;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -16,17 +19,15 @@ import java.util.Iterator;
 public class NetworkManagerImpl implements NetworkManager {
     private InetSocketAddress address;
     private RequestManager requestManager;
-    private DatabaseManager databaseManager;
 
     private Selector selector;
 
     private static final Logger logger
             = LoggerFactory.getLogger(NetworkManagerImpl.class.getSimpleName());
 
-    public NetworkManagerImpl(InetSocketAddress address, RequestManager requestManager, DatabaseManager databaseManager) {
+    public NetworkManagerImpl(InetSocketAddress address, RequestManager requestManager) {
         this.address = address;
         this.requestManager = requestManager;
-        this.databaseManager = databaseManager;
     }
 
     @Override
@@ -103,7 +104,7 @@ public class NetworkManagerImpl implements NetworkManager {
             try {
                 RequestEntity request = (RequestEntity) ois.readObject();
                 response = requestManager.process(request);
-                logger.info("Команда {} с параметрами '{}' и объектом {} успешно обработана", request.getCommand(), request.getParams(), request.getBody());
+                logger.info("Команда {} с параметрами '{}' и объектом {} успешно обработана. Ее прислал пользователь {}", request.getCommand(), request.getParams(), request.getBody(), ((User) request.getPayload()).getUsername());
             } catch (ClassNotFoundException e) {
                 response = ResponseEntity.badRequest().body("Такого класса не существует");
                 logger.error("Класс не найден");
