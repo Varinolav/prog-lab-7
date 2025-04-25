@@ -10,7 +10,8 @@ public enum Status implements Serializable {
     OK(200, "OK"),
     BADREQUEST(400, "Bad Request"),
     NOTFOUND(404, "Not found"),
-    SERVERERROR(500, "Internal server error");
+    SERVERERROR(500, "Internal server error"),
+    UNAUTHORIZED(401, "Unauthorized");
     final int exitCode;
     final String metaName;
 
@@ -32,4 +33,4 @@ public enum Status implements Serializable {
     public String getMetaName() {
         return metaName;
     }
-}
+    }

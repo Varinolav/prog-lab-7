@@ -87,4 +87,6 @@ public class ResponseEntity implements Serializable {
     public static ResponseEntity exit() {
         return new ResponseEntity(Status.SERVERERROR);
     }
+
+    public static ResponseEntity unauthorized() {return new ResponseEntity(Status.UNAUTHORIZED);}
 }

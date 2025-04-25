@@ -12,6 +12,7 @@ import ru.varino.common.models.modelUtility.InteractiveMovieCreator;
 import ru.varino.common.utility.RecursionConfiguration;
 import ru.varino.common.utility.RecursionDequeHandler;
 import ru.varino.common.utility.ScannerManager;
+import ru.varino.common.models.User;
 
 
 import java.io.*;
@@ -22,13 +23,15 @@ import java.net.Socket;
 import java.util.Scanner;
 
 
-public class Client  implements Runnable {
+public class Client implements Runnable {
     private InetAddress host;
     private int port;
     private UserService userService;
     private Console console;
     private RecursionDequeHandler recursionDequeHandler;
     private ScannerManager scannerManager;
+
+    private User initedUser;
 
 
     public Client(InetAddress host, int port, UserService userService, Console console, RecursionDequeHandler recursionDequeHandler, ScannerManager scannerManager) {
@@ -45,10 +48,12 @@ public class Client  implements Runnable {
     }
 
     private void requestToServer() {
+        auth();
         boolean status = true;
         while (status) {
             try {
                 RequestEntity request = userService.handle();
+                request.payload(initedUser);
                 if (request.getCommand().isEmpty()) continue;
 
                 if (request.getCommand().equals("execute_script")) {
@@ -154,5 +159,17 @@ public class Client  implements Runnable {
         } catch (EmptyFileException e) {
             console.printerr("Файл пуст");
         }
+    }
+
+    private void auth() {
+        Scanner scanner = scannerManager.getCurrentScanner();
+        console.println("Введите логин: ");
+        String username = scanner.nextLine();
+        console.println("Введите пароль: ");
+        String password = scanner.nextLine();
+        User user = new User(username, password);
+        RequestEntity authRequest = RequestEntity.create("auth", "").payload(user);
+        this.initedUser = user;
+        sendAndReceive(authRequest);
     }
 }

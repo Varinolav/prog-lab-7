@@ -1,4 +1,4 @@
-package ru.varino.db;
+package ru.varino.server.db;
 
 
 import org.slf4j.Logger;
@@ -8,7 +8,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import static ru.varino.db.DatabaseConfiguration.*;
+import static ru.varino.server.db.DatabaseConfiguration.*;
 
 public class DatabaseManager {
     private static DatabaseManager instance;

@@ -5,6 +5,7 @@ import ru.varino.common.models.modelUtility.builders.PersonBuilder;
 import ru.varino.common.utility.Validatable;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * Модель человека
@@ -31,6 +32,17 @@ public final class Person implements Comparable<Person>, Validatable, Serializab
         return name;
     }
 
+    public LocalDateTime getBirthday() {
+        return birthday;
+    }
+
+    public Long getWeight() {
+        return weight;
+    }
+
+    public Country getNationality() {
+        return nationality;
+    }
 
     @Override
     public String toString() {

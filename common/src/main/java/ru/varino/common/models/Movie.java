@@ -21,6 +21,9 @@ public final class Movie implements Comparable<Movie>, Validatable, Serializable
     private final MovieGenre genre; //Поле не может быть null
     private final Person director; //Поле может быть null
 
+    private int ownerId;
+    private transient User user;
+
     /**
      * Конструктор фильма
      *
@@ -39,6 +42,13 @@ public final class Movie implements Comparable<Movie>, Validatable, Serializable
 
     }
 
+    public int getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(int ownerId) {
+        this.ownerId = ownerId;
+    }
 
     public String getName() {
         return name;

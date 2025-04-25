@@ -4,17 +4,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.varino.common.io.Console;
 import ru.varino.common.io.StandartConsole;
-import ru.varino.common.models.Movie;
+
 import ru.varino.common.utility.NetworkManager;
-import ru.varino.common.utility.RecursionDequeHandler;
-import ru.varino.db.DatabaseManager;
+import ru.varino.server.db.DatabaseManager;
+import ru.varino.server.db.service.MovieService;
+import ru.varino.server.db.service.UserService;
 import ru.varino.server.managers.*;
 import ru.varino.server.commands.*;
 import ru.varino.common.utility.ServerConfiguration;
 
 import java.net.InetSocketAddress;
 import java.sql.SQLException;
-import java.util.Hashtable;
+
 
 
 public class RunServer {
@@ -25,21 +26,22 @@ public class RunServer {
 
         Console console = new StandartConsole();
 
-        String fileName = "";
+
+
+        DatabaseManager databaseManager = null;
         try {
-            fileName = "args[0]";
-        } catch (ArrayIndexOutOfBoundsException e) {
-            console.println("Введите имя файла с помощью аргумента командной строки");
+            databaseManager = DatabaseManager.getInstance();
+        } catch (SQLException e) {
+            logger.error("Ошибка подключения к базе данных: {}", e.getMessage());
             System.exit(0);
         }
+        UserService userService = new UserService(databaseManager.getConnection());
+        MovieService movieService = new MovieService(databaseManager.getConnection());
 
-        FileManager fileManager = new FileManager(console, fileName);
-        ParseManager parseManager = new ParseManager(console);
-        CollectionManager collectionManager = new CollectionManager();
 
-        String json = fileManager.read();
-        Hashtable<Integer, Movie> initCollection = parseManager.getHashTableFromJson(json);
-        collectionManager.setCollection(initCollection);
+        CollectionManager collectionManager = new CollectionManager(movieService);
+
+        collectionManager.load();
         logger.info("Коллекция загружена");
 
 
@@ -60,25 +62,20 @@ public class RunServer {
                 .add("average_of_total_box_office", new AverageTotalBoxOffice(collectionManager))
                 .add("min_by_director", new MinByDirector(collectionManager))
                 .add("count_less_than_genre", new CountLessGenre(collectionManager))
-                .add("save", new Save(parseManager, fileManager, collectionManager));
+                .add("save", new Save(collectionManager));
         logger.info("Команды загружены");
 
-        DatabaseManager databaseManager = null;
-        try {
-            databaseManager = DatabaseManager.getInstance();
-        } catch (SQLException e) {
-            logger.error("Ошибка подключения к базе данных: {}", e.getMessage());
-            System.exit(0);
-        }
 
-        RequestManager requestManager = new RequestManager(commandManager);
-        CommandListener commandListener = new CommandListener(fileManager, collectionManager, parseManager, console);
+        RequestManager requestManager = new RequestManager(commandManager, userService, movieService);
+        CommandListener commandListener = new CommandListener(collectionManager, console);
         InetSocketAddress address = new InetSocketAddress(ServerConfiguration.HOST, ServerConfiguration.PORT);
-        NetworkManager networkManager = new NetworkManagerImpl(address, requestManager, databaseManager);
+        NetworkManager networkManager = new NetworkManagerImpl(address, requestManager);
 
         Server server = new Server(commandListener, networkManager);
         logger.info("Сервер запущен");
 
         server.run();
     }
+
+
 }
