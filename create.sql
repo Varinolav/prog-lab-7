@@ -13,12 +13,12 @@ create table movie
     cord_x               float8  not null,
     cord_y               float8  not null,
     creation_date        timestamp default now(),
-    oscars_count         int check (oscars_count > 0),
-    total_box_office     int check (total_box_office > 0),
+    oscars_count         int,
+    total_box_office     int,
     tagline              text,
     genre                text not null,
     director_name        text not null,
-    director_birthday    time,
+    director_birthday    timestamptz,
     director_weight      int,
     director_nationality text not null
 );

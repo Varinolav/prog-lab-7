@@ -1,7 +1,6 @@
 package ru.varino.common.models;
 
 import ru.varino.common.models.modelUtility.builders.MovieBuilder;
-import ru.varino.common.utility.Validatable;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -9,7 +8,7 @@ import java.time.LocalDate;
 /**
  * Модель фильма
  */
-public final class Movie implements Comparable<Movie>, Validatable, Serializable {
+public final class Movie implements Comparable<Movie>, Serializable {
 
     private Integer id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     private final String name; //Поле не может быть null, Строка не может быть пустой
@@ -142,20 +141,5 @@ public final class Movie implements Comparable<Movie>, Validatable, Serializable
                 ", genre=" + genre +
                 ", director=" + director +
                 '}';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean validate() {
-        if (id == null || id <= 0) return false;
-        if (name == null || name.isBlank()) return false;
-        if (coordinates == null || !coordinates.validate()) return false;
-        if (creationDate == null) return false;
-        if (oscarsCount != null && oscarsCount <= 0) return false;
-        if (totalBoxOffice <= 0) return false;
-        if (genre == null) return false;
-        return director == null || director.validate();
     }
 }

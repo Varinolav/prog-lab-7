@@ -114,7 +114,6 @@ public class CollectionManager {
     public void load() {
         List<Movie> movieList = movieService.findAll();
         DatabaseMap collectionMap = new DatabaseMap(movieService);
-        System.out.println(movieList.size());
         for (Movie movie : movieList) {
             collectionMap.putWithoutSaving(movie.getId(), movie);
         }

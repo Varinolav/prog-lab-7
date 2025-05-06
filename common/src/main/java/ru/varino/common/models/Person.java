@@ -2,7 +2,6 @@ package ru.varino.common.models;
 
 
 import ru.varino.common.models.modelUtility.builders.PersonBuilder;
-import ru.varino.common.utility.Validatable;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -10,7 +9,7 @@ import java.time.LocalDateTime;
 /**
  * Модель человека
  */
-public final class Person implements Comparable<Person>, Validatable, Serializable {
+public final class Person implements Comparable<Person>, Serializable {
     private final String name; //Поле не может быть null, Строка не может быть пустой
     private final java.time.LocalDateTime birthday; //Поле может быть null
     private final Long weight; //Поле может быть null, Значение поля должно быть больше 0
@@ -74,14 +73,6 @@ public final class Person implements Comparable<Person>, Validatable, Serializab
 
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean validate() {
-        if (name == null || name.isBlank()) return false;
-        if (weight != null && weight <= 0) return false;
-        return nationality != null;
 
-    }
+
 }

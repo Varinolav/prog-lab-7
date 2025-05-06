@@ -2,7 +2,6 @@ package ru.varino.common.models;
 
 
 import ru.varino.common.models.modelUtility.builders.CoordinatesBuilder;
-import ru.varino.common.utility.Validatable;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -10,7 +9,7 @@ import java.math.BigDecimal;
 /**
  * Модель координат
  */
-public final class Coordinates implements Validatable, Serializable {
+public final class Coordinates implements Serializable {
     private final BigDecimal x;
     private final BigDecimal y; //Максимальное значение поля: 522
 
@@ -44,11 +43,4 @@ public final class Coordinates implements Validatable, Serializable {
         return x + " ; " + y;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean validate() {
-        return y.compareTo(new BigDecimal(522)) <= 0;
-    }
 }

@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.varino.common.communication.RequestEntity;
 import ru.varino.common.communication.ResponseEntity;
-import ru.varino.common.models.User;
 import ru.varino.common.utility.*;
 import ru.varino.server.db.DatabaseManager;
 import ru.varino.server.db.service.MovieService;
@@ -15,7 +14,6 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,13 +24,11 @@ public class NetworkManagerImpl implements NetworkManager {
     private InetSocketAddress address;
     private RequestManager requestManager;
 
-
-    private final Map<SocketChannel, ClientData> clientData;
+    private final Map<SocketChannel, ClientData> clientDataMap = new ConcurrentHashMap<>();
+    private ExecutorService readPool;
+    private ExecutorService writePool;
 
     private Selector selector;
-
-    private ExecutorService cachedPool;
-    private ExecutorService fixedPool;
 
     private static final Logger logger
             = LoggerFactory.getLogger(NetworkManagerImpl.class.getSimpleName());
@@ -40,9 +36,6 @@ public class NetworkManagerImpl implements NetworkManager {
     public NetworkManagerImpl(InetSocketAddress address, RequestManager requestManager) {
         this.address = address;
         this.requestManager = requestManager;
-        this.cachedPool = Executors.newCachedThreadPool();
-        this.fixedPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        this.clientData = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -54,9 +47,14 @@ public class NetworkManagerImpl implements NetworkManager {
             serverChannel.configureBlocking(false);
             serverChannel.register(selector, SelectionKey.OP_ACCEPT);
             this.selector = selector;
+            this.readPool = Executors.newCachedThreadPool();
+            this.writePool = Executors.newFixedThreadPool(10);
             logger.info("Сервер работает на хосте {}, порт {}", address.getHostName(), address.getPort());
         } catch (IOException e) {
-            logger.error("Ошибка ввода-вывода");
+            logger.error("Ошибка ввода-вывода, {}", e.getStackTrace());
+            System.out.println(e.getMessage());
+
+
         }
     }
 
@@ -76,26 +74,18 @@ public class NetworkManagerImpl implements NetworkManager {
                         if (key.isAcceptable()) {
                             acceptKey(key);
                         } else if (key.isReadable()) {
-                            cachedPool.submit(() -> {
-                                try {
-                                    readClientData(key);
-                                } catch (ClassNotFoundException e) {
-                                    logger.error("Класс не найден");
-
-                                } catch (IOException e) {
-                                    logger.error("Ошибка ввода-вывода");
-                                }
-                            });
-                            fixedPool.submit(() -> processRequest(key));
-                            Thread sending = new Thread(() -> sendData(key));
-                            sending.start();
+                            key.interestOps(key.interestOps() & ~SelectionKey.OP_READ);
+                            processKey(key);
                         }
                     }
                 }
             } catch (IOException e) {
-                logger.error("Ошибка ввода-вывода");
+                logger.error("Ошибка ввода-вывода, {}", e.getStackTrace());
+                System.out.println(e.getMessage());
+
+            }
         }
-    }}
+    }
 
     private void acceptKey(SelectionKey key) {
         try {
@@ -104,65 +94,106 @@ public class NetworkManagerImpl implements NetworkManager {
             clientChannel.configureBlocking(false);
 
             clientChannel.register(selector, SelectionKey.OP_READ);
-            clientData.put(clientChannel, new ClientData());
             logger.info("Принято новое соединение: {}", clientChannel.getRemoteAddress());
         } catch (IOException e) {
-            logger.error("Ошибка ввода-вывода");
+            logger.error("Ошибка ввода-вывода, {}", e.getStackTrace());
+            System.out.println(e.getMessage());
+
+
             closeConnection(key);
         }
 
     }
 
-    private void readClientData(SelectionKey key) throws ClassNotFoundException, IOException {
-        try {
-            SocketChannel userChannel = (SocketChannel) key.channel();
-            userChannel.configureBlocking(false);
+    private void processKey(SelectionKey key) {
+        readPool.submit(() -> {
+            try {
+                SocketChannel userChannel = (SocketChannel) key.channel();
+                userChannel.configureBlocking(false);
+                ByteBuffer buffer = ByteBuffer.allocate(2048);
+                int bytesRead = userChannel.read(buffer);
+                buffer.flip();
+                System.out.println("щя начну читать)");
+                ByteArrayInputStream is = new ByteArrayInputStream(buffer.array(), 0, bytesRead);
+                ObjectInputStream ois = new ObjectInputStream(is);
+                RequestEntity request = (RequestEntity) ois.readObject();
+                process(key, request);
+            } catch (IOException e) {
+                logger.error("Ошибка ввода-вывода, {}", e.getStackTrace());
+                System.out.println(e.getMessage());
 
-            ByteBuffer buffer = ByteBuffer.allocate(2048);
-            int bytesRead = userChannel.read(buffer);
-            buffer.flip();
 
-            ByteArrayInputStream is = new ByteArrayInputStream(buffer.array(), 0, bytesRead);
-            ObjectInputStream ois = new ObjectInputStream(is);
-            RequestEntity request = (RequestEntity) ois.readObject();
-
-            clientData.put(userChannel, clientData.get(userChannel).setRequestEntity(request));
-        } catch (IOException e) {
-            logger.error("Ошибка ввода-вывода");
-        }
+                closeConnection(key);
+            } catch (ClassNotFoundException e) {
+                logger.error("Класс не найден");
+            }
+        });
     }
 
-
-    private void processRequest(SelectionKey key) {
-        try {
-            SocketChannel userChannel = (SocketChannel) key.channel();
-            RequestEntity request = clientData.get(userChannel).requestEntity();
-
+    private void process(SelectionKey key, RequestEntity request) {
+        writePool.submit(() -> {
             ResponseEntity response = requestManager.process(request);
-            logger.info("Команда {} с параметрами '{}' и объектом {} успешно обработана. Ее прислал пользователь {}", request.getCommand(), request.getParams(), request.getBody(), ((User) request.getPayload()).getUsername());
-            userChannel.register(selector, SelectionKey.OP_WRITE);
-            clientData.put(userChannel, clientData.get(userChannel).setResponseEntity(response));
-        } catch (Exception e) {
-            logger.error("Ошибка", e);
-        }
+            sendData(key, response);
+        });
     }
 
-    private void sendData(SelectionKey key) {
-        SocketChannel userChannel = (SocketChannel) key.channel();
-        try {
-            userChannel.configureBlocking(false);
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(os);
-            ResponseEntity response = clientData.get(userChannel).responseEntity();
-            oos.writeObject(response);
-            ByteBuffer buffer = ByteBuffer.wrap(os.toByteArray());
-            userChannel.write(buffer);
-            logger.info("Ответ отправлен на клиент");
-            userChannel.close();
-        } catch (IOException e) {
-            logger.error("Ошибка ввода-вывода");
-            closeConnection(key);
-        }
+
+//    private ResponseEntity processKey(SelectionKey key) {
+//        try {
+//            SocketChannel userChannel = (SocketChannel) key.channel();
+//            userChannel.configureBlocking(false);
+//
+//            ByteBuffer buffer = ByteBuffer.allocate(2048);
+//            int bytesRead = userChannel.read(buffer);
+//            buffer.flip();
+//
+//            ByteArrayInputStream is = new ByteArrayInputStream(buffer.array(), 0, bytesRead);
+//            ObjectInputStream ois = new ObjectInputStream(is);
+//            ResponseEntity response;
+//            try {
+//                RequestEntity request = (RequestEntity) ois.readObject();
+//                response = requestManager.process(request);
+//                logger.info("Команда {} с параметрами '{}' и объектом {} успешно обработана", request.getCommand(), request.getParams(), request.getBody());
+//            } catch (ClassNotFoundException e) {
+//                response = ResponseEntity.badRequest().body("Такого класса не существует");
+//                logger.error("Класс не найден");
+//            }
+//            userChannel.register(selector, SelectionKey.OP_WRITE);
+//            return response;
+//        } catch (IOException e) {
+//            logger.error("Ошибка ввода-вывода, {}", e.getStackTrace());
+
+
+//
+//            closeConnection(key);
+//            return ResponseEntity.badRequest();
+//        }
+//    }
+
+
+    private void sendData(SelectionKey key, ResponseEntity response) {
+        new Thread(() -> {
+            SocketChannel userChannel = (SocketChannel) key.channel();
+            try {
+                userChannel.configureBlocking(false);
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(os);
+                oos.writeObject(response);
+                ByteBuffer buffer = ByteBuffer.wrap(os.toByteArray());
+                userChannel.write(buffer);
+                logger.info("Ответ отправлен на клиент");
+
+
+                userChannel.close();
+            } catch (IOException e) {
+                logger.error("Ошибка ввода-вывода, {}", e.getStackTrace());
+                System.out.println(e.getMessage());
+
+
+                closeConnection(key);
+            }
+        }).start();
+
     }
 
     private void closeConnection(SelectionKey key) {
@@ -171,7 +202,9 @@ public class NetworkManagerImpl implements NetworkManager {
             key.cancel();
             client.close();
         } catch (IOException e) {
-            logger.error("Ошибка ввода-вывода");
+            logger.error("Ошибка ввода-вывода, {}", e.getStackTrace());
+            System.out.println(e.getMessage());
+
 
         }
     }
