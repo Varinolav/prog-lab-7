@@ -1,6 +1,10 @@
 package ru.varino.server.commands;
 
+import ru.varino.common.exceptions.NotEnoughRightsException;
+import ru.varino.common.exceptions.PermissionDeniedException;
+import ru.varino.common.models.User;
 import ru.varino.common.models.modelUtility.IdGenerator;
+import ru.varino.server.db.service.UserService;
 import ru.varino.server.managers.CollectionManager;
 import ru.varino.common.models.Movie;
 import ru.varino.common.communication.RequestEntity;
@@ -33,8 +37,11 @@ public class Update extends Command {
             if (collectionManager.getElementById(id) == null) return ResponseEntity.badRequest()
                     .body("Элемента с таким id не существует в коллекции");
             Movie movie = (Movie) req.getBody();
-            movie.setId(IdGenerator.getInstance().generateId());
-            collectionManager.addElementToCollection(id, movie);
+            try {
+                collectionManager.addElementToCollection(id, movie, req.getPayload());
+            } catch (NotEnoughRightsException e) {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
             return ResponseEntity.ok().body("Элемент успешно перезаписан");
 
         } catch (NumberFormatException e) {

@@ -21,7 +21,7 @@ public final class Movie implements Comparable<Movie>, Validatable, Serializable
     private final MovieGenre genre; //Поле не может быть null
     private final Person director; //Поле может быть null
 
-    private int ownerId;
+    private long ownerId;
     private transient User user;
 
     /**
@@ -38,15 +38,26 @@ public final class Movie implements Comparable<Movie>, Validatable, Serializable
         tagline = builder.getTagline();
         genre = builder.getGenre();
         director = builder.getDirector();
-
-
     }
 
-    public int getOwnerId() {
+    public Movie(Integer id, int ownerId, String name, Coordinates coordinates, LocalDate creationDate, Integer oscarsCount, int totalBoxOffice, String tagline, MovieGenre genre, Person director) {
+        this.id = id;
+        this.name = name;
+        this.coordinates = coordinates;
+        this.creationDate = creationDate;
+        this.oscarsCount = oscarsCount;
+        this.totalBoxOffice = totalBoxOffice;
+        this.tagline = tagline;
+        this.genre = genre;
+        this.director = director;
+        this.ownerId = ownerId;
+    }
+
+    public long getOwnerId() {
         return ownerId;
     }
 
-    public void setOwnerId(int ownerId) {
+    public void setOwnerId(long ownerId) {
         this.ownerId = ownerId;
     }
 
@@ -120,7 +131,8 @@ public final class Movie implements Comparable<Movie>, Validatable, Serializable
     @Override
     public String toString() {
         return "Movie{" +
-                "id=" + id +
+                "ownerId=" + ownerId +
+                ", id=" + id +
                 ", name='" + name + '\'' +
                 ", coordinates=" + coordinates +
                 ", creationDate=" + creationDate +

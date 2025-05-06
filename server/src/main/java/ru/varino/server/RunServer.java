@@ -17,7 +17,6 @@ import java.net.InetSocketAddress;
 import java.sql.SQLException;
 
 
-
 public class RunServer {
     private static final Logger logger = LoggerFactory.getLogger(RunServer.class.getSimpleName());
 
@@ -25,7 +24,6 @@ public class RunServer {
         logger.info("Initialization...");
 
         Console console = new StandartConsole();
-
 
 
         DatabaseManager databaseManager = null;
@@ -39,7 +37,7 @@ public class RunServer {
         MovieService movieService = new MovieService(databaseManager.getConnection());
 
 
-        CollectionManager collectionManager = new CollectionManager(movieService);
+        CollectionManager collectionManager = new CollectionManager(movieService, userService);
 
         collectionManager.load();
         logger.info("Коллекция загружена");
@@ -58,7 +56,7 @@ public class RunServer {
                 .add("exit", new Exit())
                 .add("replace_if_greater", new ReplaceIf("greater", collectionManager))
                 .add("replace_if_lower", new ReplaceIf("lower", collectionManager))
-                .add("remove_lower_key", new RemoveLowerKey(collectionManager))
+                .add("remove_lower_key", new RemoveLowerKey(collectionManager, userService))
                 .add("average_of_total_box_office", new AverageTotalBoxOffice(collectionManager))
                 .add("min_by_director", new MinByDirector(collectionManager))
                 .add("count_less_than_genre", new CountLessGenre(collectionManager))

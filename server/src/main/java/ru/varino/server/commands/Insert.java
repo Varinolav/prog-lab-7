@@ -1,6 +1,10 @@
 package ru.varino.server.commands;
 
+import ru.varino.common.exceptions.NotEnoughRightsException;
+import ru.varino.common.exceptions.PermissionDeniedException;
+import ru.varino.common.models.User;
 import ru.varino.common.models.modelUtility.IdGenerator;
+import ru.varino.server.db.service.UserService;
 import ru.varino.server.managers.CollectionManager;
 import ru.varino.common.models.Movie;
 import ru.varino.common.models.modelUtility.InteractiveMovieCreator;
@@ -18,7 +22,6 @@ public class Insert extends Command {
     public Insert(CollectionManager collectionManager) {
         super("insert <id>", "добавить новый элемент с заданным ключом");
         this.collectionManager = collectionManager;
-
     }
 
     /**
@@ -30,13 +33,20 @@ public class Insert extends Command {
     @Override
     public ResponseEntity execute(RequestEntity req) {
         String args = req.getParams();
+        if (args.isEmpty()) return ResponseEntity.badRequest().body("Неверные аргументы");
+
         try {
             Integer id = Integer.parseInt(args);
             if (collectionManager.getElementById(id) != null) return ResponseEntity.badRequest()
                     .body("Элемента с таким id уже существует в коллекции");
             Movie movie = (Movie) req.getBody();
-            movie.setId(IdGenerator.getInstance().generateId());
-            collectionManager.addElementToCollection(id, movie);
+            try {
+                collectionManager.addElementToCollection(id, movie, req.getPayload());
+            } catch (NotEnoughRightsException e) {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
+
+
             return ResponseEntity.ok().body("Элемент добавлен в коллекцию");
 
         } catch (NumberFormatException e) {

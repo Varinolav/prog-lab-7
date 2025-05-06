@@ -1,11 +1,11 @@
 package ru.varino.server.db.query;
 
 public enum MovieQuery {
-    FIND_ALL("select * from movies"),
+    FIND_ALL("select * from movie"),
     SAVE_PERSON("insert into movie " +
             "(owner_id, name, cord_x, cord_y, oscars_count, total_box_office, tagline, genre, director_name, director_birthday, director_weight, director_nationality) " +
             "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id"),
-    REMOVE_BY_ID("delete from movies where id = ?");
+    REMOVE_BY_ID("delete from movie where id = ?");
 
 
     private String sql;

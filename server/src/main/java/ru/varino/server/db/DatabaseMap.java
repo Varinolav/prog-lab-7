@@ -21,9 +21,13 @@ public class DatabaseMap extends HashMap<Integer, Movie> {
 
     @Override
     public Movie remove(Object id) {
-        movieService.removeById((Integer) id);
-
+        Movie m = super.get(id);
+        var movieId = m.getId();
+        movieService.removeById(movieId);
         return super.remove(id);
     }
 
+    public void putWithoutSaving(Integer id, Movie m) {
+        super.put(id, m);
+    }
 }

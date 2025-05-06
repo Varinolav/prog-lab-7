@@ -1,8 +1,12 @@
 package ru.varino.server.managers;
 
+import ru.varino.common.exceptions.NotEnoughRightsException;
+import ru.varino.common.exceptions.PermissionDeniedException;
 import ru.varino.common.models.Movie;
+import ru.varino.common.models.User;
 import ru.varino.server.db.DatabaseMap;
 import ru.varino.server.db.service.MovieService;
+import ru.varino.server.db.service.UserService;
 
 import java.util.*;
 
@@ -14,11 +18,13 @@ public class CollectionManager {
     private Map<Integer, Movie> collection;
     private final Date creationDate;
     private final MovieService movieService;
+    private final UserService userService;
 
-    public CollectionManager(MovieService movieService) {
+    public CollectionManager(MovieService movieService, UserService userService) {
         collection = new DatabaseMap(movieService);
         creationDate = new Date();
         this.movieService = movieService;
+        this.userService = userService;
     }
 
     public Map<Integer, Movie> getCollection() {
@@ -72,7 +78,12 @@ public class CollectionManager {
         return formatMovies(collection);
     }
 
-    public void addElementToCollection(Integer id, Movie movie) {
+    public void addElementToCollection(Integer id, Movie movie, Object payload) throws NotEnoughRightsException {
+        var userId = userService.findByUsername(((User) payload).getUsername()).get().getId();
+        if (collection.get(id) != null & movie.getOwnerId() != userId) {
+            throw new NotEnoughRightsException();
+        }
+        movie.setOwnerId(userId);
         collection.put(id, movie);
 
     }
@@ -85,7 +96,10 @@ public class CollectionManager {
         return collection.keySet();
     }
 
-    public void removeElementFromCollection(Integer id) {
+    public void removeElementFromCollection(Integer id, Object payload) throws NotEnoughRightsException {
+        var userId = userService.findByUsername(((User) payload).getUsername()).get().getId();
+        Movie movie = collection.get(id);
+        if (movie.getOwnerId() != userId) throw new NotEnoughRightsException();
         collection.remove(id);
     }
 
@@ -97,7 +111,15 @@ public class CollectionManager {
         return collection.get(id);
     }
 
-    public void load(){}
+    public void load() {
+        List<Movie> movieList = movieService.findAll();
+        DatabaseMap collectionMap = new DatabaseMap(movieService);
+        System.out.println(movieList.size());
+        for (Movie movie : movieList) {
+            collectionMap.putWithoutSaving(movie.getId(), movie);
+        }
+        this.collection = collectionMap;
+    }
 }
 
 

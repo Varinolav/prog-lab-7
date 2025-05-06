@@ -28,6 +28,13 @@ public final class Person implements Comparable<Person>, Validatable, Serializab
         this.nationality = builder.getNationality();
     }
 
+    public Person(String name, LocalDateTime birthday, Long weight, Country nationality) {
+        this.name = name;
+        this.birthday = birthday;
+        this.weight = weight;
+        this.nationality = nationality;
+    }
+
     public String getName() {
         return name;
     }

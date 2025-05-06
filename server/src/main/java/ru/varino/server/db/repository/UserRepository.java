@@ -8,11 +8,10 @@ public interface UserRepository {
 
     void save(User user);
 
-    Optional<User> findById(int id);
+    Optional<User> findById(long id);
 
     Optional<User> findByUsername(String username);
 
-    boolean checkPassword(User user, String password);
 
     Optional<User> findByUsernamePassword(String username, String password);
 

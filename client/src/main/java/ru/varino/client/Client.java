@@ -149,6 +149,7 @@ public class Client implements Runnable {
                         console.println("Ввод прекращен");
                     }
                 }
+                request.payload(initedUser);
                 sendAndReceive(request);
             }
             recursionDequeHandler.removeFileNameFirst();

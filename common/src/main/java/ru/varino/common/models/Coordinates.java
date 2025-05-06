@@ -24,6 +24,11 @@ public final class Coordinates implements Validatable, Serializable {
         y = builder.getY();
     }
 
+    public Coordinates(BigDecimal x, BigDecimal y) {
+        this.x = x;
+        this.y = y;
+    }
+
     public BigDecimal getX() {
         return x;
     }

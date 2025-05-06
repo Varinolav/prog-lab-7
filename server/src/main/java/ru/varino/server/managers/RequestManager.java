@@ -39,8 +39,6 @@ public class RequestManager {
         if (command == null) {
             return ResponseEntity.badRequest().body("Команда '" + commandReq + "' не найдена, воспользуйтесь help");
         }
-
-
         return command.execute(req);
     }
 }

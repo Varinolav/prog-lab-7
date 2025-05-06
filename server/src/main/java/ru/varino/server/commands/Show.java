@@ -3,12 +3,13 @@ package ru.varino.server.commands;
 import ru.varino.server.managers.CollectionManager;
 import ru.varino.common.communication.RequestEntity;
 import ru.varino.common.communication.ResponseEntity;
-
+import ru.varino.common.models.User;
 /**
  * Класс команды Show
  */
 public class Show extends Command {
     private final CollectionManager collectionManager;
+
 
     public Show(CollectionManager collectionManager) {
         super("show", "вывести в стандартный поток вывода все элементы коллекции в строковом представлении");
@@ -24,6 +25,7 @@ public class Show extends Command {
     public ResponseEntity execute(RequestEntity req) {
         String args = req.getParams();
         if (!args.isEmpty()) return ResponseEntity.badRequest().body("Неверные аргументы");
+
         return ResponseEntity.ok().body(collectionManager.toString());
 
 

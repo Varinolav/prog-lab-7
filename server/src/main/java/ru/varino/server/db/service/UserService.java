@@ -34,9 +34,9 @@ public class UserService implements UserRepository {
     }
 
     @Override
-    public Optional<User> findById(int id) {
+    public Optional<User> findById(long id) {
         try (PreparedStatement ps = connection.prepareStatement(UserQuery.FIND_BY_ID.getSql())) {
-            ps.setInt(1, id);
+            ps.setLong(1, id);
 
             try (ResultSet result = ps.executeQuery()) {
                 return optionalBoxing(result);
@@ -61,10 +61,6 @@ public class UserService implements UserRepository {
         }
     }
 
-    @Override
-    public boolean checkPassword(User user, String password) {
-        return true;
-    }
 
     @Override
     public Optional<User> findByUsernamePassword(String username, String password) {
