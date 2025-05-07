@@ -64,7 +64,7 @@ public class RunServer {
         logger.info("Команды загружены");
 
 
-        RequestManager requestManager = new RequestManager(commandManager, userService, movieService);
+        RequestManager requestManager = new RequestManager(commandManager, userService);
         CommandListener commandListener = new CommandListener(collectionManager, console);
         InetSocketAddress address = new InetSocketAddress(ServerConfiguration.HOST, ServerConfiguration.PORT);
         NetworkManager networkManager = new NetworkManagerImpl(address, requestManager);

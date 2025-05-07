@@ -14,24 +14,25 @@ import ru.varino.server.db.service.UserService;
 public class RequestManager {
     private CommandManager commandManager;
     private UserService userService;
-    private MovieService movieService;
 
 
-    public RequestManager(CommandManager commandManager, UserService userService, MovieService movieService) {
+    public RequestManager(CommandManager commandManager, UserService userService) {
         this.commandManager = commandManager;
         this.userService = userService;
-        this.movieService = movieService;
     }
 
     public ResponseEntity process(RequestEntity req) {
         String commandReq = req.getCommand();
         if ("auth".equals(commandReq)) {
             User user = (User) req.getPayload();
-            if (userService.findByUsernamePassword(user.getUsername(), user.getPassword()).isPresent()) {
+            if (userService.findByUsername(user.getUsername()).isPresent() && userService.checkPassword(user, user.getPassword())) {
+                return ResponseEntity.unauthorized().body("Пароль введен неверно.");
+            }
+            if (userService.findByUsernamePassword(user.getUsername(), PasswordUtil.hashPassword(user.getPassword())).isPresent()) {
                 return ResponseEntity.ok().body("Вы успешно авторизованы");
             } else {
                 userService.save(user);
-                return ResponseEntity.unauthorized().body("Вы - новый пользователь. Авторизация прошла успешно");
+                return ResponseEntity.ok().body("Вы - новый пользователь. Авторизация прошла успешно");
             }
         }
         if (commandReq.isEmpty()) return ResponseEntity.badRequest().body("Введено 0 аргументов");

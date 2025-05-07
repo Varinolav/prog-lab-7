@@ -78,7 +78,7 @@ public class Client implements Runnable {
         }
     }
 
-    private void sendAndReceive(RequestEntity request) {
+    private ResponseEntity sendAndReceive(RequestEntity request) {
         try (Socket socket = new Socket(host, port)) {
             OutputStream out = socket.getOutputStream();
             out.write(serializeRequest(request));
@@ -93,12 +93,16 @@ public class Client implements Runnable {
 
             ResponseEntity response = (ResponseEntity) ois.readObject();
             console.printResponse(response);
+            return response;
         } catch (ClassNotFoundException e) {
             console.printerr("Класса с таким именем не существует");
+            return null;
         } catch (ConnectException e) {
             console.printerr("Сервер временно недоступен");
+            return null;
         } catch (Exception e) {
             console.printerr(e.toString());
+            return null;
         }
     }
 
@@ -171,6 +175,7 @@ public class Client implements Runnable {
         User user = new User(username, password);
         RequestEntity authRequest = RequestEntity.create("auth", "").payload(user);
         this.initedUser = user;
-        sendAndReceive(authRequest);
+        ResponseEntity response = sendAndReceive(authRequest);
+        ;
     }
 }

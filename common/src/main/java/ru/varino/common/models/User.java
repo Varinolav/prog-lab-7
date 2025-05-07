@@ -3,7 +3,7 @@ package ru.varino.common.models;
 import java.io.Serializable;
 
 public class User implements Serializable {
-    private int id;
+    private Integer id = null;
     private String username;
     private String password;
 

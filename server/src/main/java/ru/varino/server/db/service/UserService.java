@@ -6,6 +6,7 @@ import ru.varino.common.models.User;
 import ru.varino.server.RunServer;
 import ru.varino.server.db.query.UserQuery;
 import ru.varino.server.db.repository.UserRepository;
+import ru.varino.server.managers.PasswordUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -25,7 +26,7 @@ public class UserService implements UserRepository {
     public void save(User user) {
         try (PreparedStatement ps = connection.prepareStatement(UserQuery.SAVE_USER.getSql())) {
             ps.setString(1, user.getUsername());
-            ps.setString(2, user.getPassword());
+            ps.setString(2, PasswordUtil.hashPassword(user.getPassword()));
             ps.executeUpdate();
             logger.info("Пользователь {} успешно сохранен в базу", user.getUsername());
         } catch (SQLException e) {
@@ -76,6 +77,18 @@ public class UserService implements UserRepository {
             logger.error("Пользователь не найден по имени", e);
             return Optional.empty();
         }
+    }
+
+
+    @Override
+    public boolean checkPassword(User user, String password) {
+        Optional<User> userOptional = findByUsername(user.getUsername());
+        if (userOptional.isEmpty()) {
+            logger.error("Пользователь не найден по имени");
+            return false;
+        }
+        User u = userOptional.get();
+        return PasswordUtil.hashPassword(password).equals(u.getPassword());
     }
 
     private Optional<User> optionalBoxing(ResultSet result) throws SQLException {

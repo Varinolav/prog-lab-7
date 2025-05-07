@@ -4,7 +4,6 @@ import ru.varino.common.models.Coordinates;
 import ru.varino.common.models.Movie;
 import ru.varino.common.models.MovieGenre;
 import ru.varino.common.models.Person;
-import ru.varino.common.models.modelUtility.IdGenerator;
 
 import java.time.LocalDate;
 
@@ -22,11 +21,6 @@ public class MovieBuilder implements Builder<Movie> {
     private MovieGenre genre;
     private Person director;
 
-    public MovieBuilder buildId() {
-        IdGenerator idGen = IdGenerator.getInstance();
-        this.id = idGen.generateId();
-        return this;
-    }
 
     public MovieBuilder buildName(String name) {
         if (name == null) throw new IllegalArgumentException("Имя не может быть null");

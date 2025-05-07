@@ -1,10 +1,6 @@
 package ru.varino.server.commands;
 
 import ru.varino.common.exceptions.NotEnoughRightsException;
-import ru.varino.common.exceptions.PermissionDeniedException;
-import ru.varino.common.models.User;
-import ru.varino.common.models.modelUtility.IdGenerator;
-import ru.varino.server.db.service.UserService;
 import ru.varino.server.managers.CollectionManager;
 import ru.varino.common.models.Movie;
 import ru.varino.common.communication.RequestEntity;

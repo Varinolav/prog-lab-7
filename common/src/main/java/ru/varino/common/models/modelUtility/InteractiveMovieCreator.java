@@ -30,7 +30,6 @@ public class InteractiveMovieCreator {
      * @param console консоль
      * @param scanner сканнер
      * @return элемент коллекции
-     * @throws InterruptedException если ввод прерван, выбрасывается исключение
      */
     public static Movie create(Console console, Scanner scanner) throws InterruptedException {
         Function<String, Country> CountryValueOf = x -> {
@@ -76,7 +75,6 @@ public class InteractiveMovieCreator {
         Function<String, LocalDateTime> parseLocalDateTime = x -> LocalDateTime.parse(x, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
 
         MovieBuilder movieBuilder = new MovieBuilder();
-        movieBuilder.buildId();
         input("Введите имя: ", console, movieBuilder::buildName, String::valueOf, scanner);
 
         CoordinatesBuilder coordinatesBuilder = new CoordinatesBuilder();
@@ -109,20 +107,16 @@ public class InteractiveMovieCreator {
      * @param parser  парсер переданного значения
      * @param scanner сканнер
      * @param <T>     Класс коллекции
-     * @throws InterruptedException если ввод прерван, выбрасывается исключение
      */
     private static <T> void input(String prompt,
                                   Console console,
                                   Consumer<T> setter,
                                   Function<String, T> parser,
-                                  Scanner scanner) throws InterruptedException {
+                                  Scanner scanner) {
         while (true) {
             try {
                 console.println(prompt);
                 String input = scanner.nextLine().trim();
-                if (input.equals("q")) {
-                    throw new InterruptedException("Ввод прекращен");
-                }
 
                 if (input.isEmpty()) {
                     setter.accept(null);

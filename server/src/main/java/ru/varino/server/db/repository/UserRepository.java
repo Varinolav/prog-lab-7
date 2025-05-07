@@ -15,5 +15,6 @@ public interface UserRepository {
 
     Optional<User> findByUsernamePassword(String username, String password);
 
+    boolean checkPassword(User user, String password);
 
 }
