@@ -167,15 +167,17 @@ public class Client implements Runnable {
     }
 
     private void auth() {
-        Scanner scanner = scannerManager.getCurrentScanner();
-        console.println("Введите логин: ");
-        String username = scanner.nextLine();
-        console.println("Введите пароль: ");
-        String password = scanner.nextLine();
-        User user = new User(username, password);
-        RequestEntity authRequest = RequestEntity.create("auth", "").payload(user);
-        this.initedUser = user;
-        ResponseEntity response = sendAndReceive(authRequest);
-        ;
+        ResponseEntity response;
+        do {
+            Scanner scanner = scannerManager.getCurrentScanner();
+            console.println("Введите логин: ");
+            String username = scanner.nextLine();
+            console.println("Введите пароль: ");
+            String password = scanner.nextLine();
+            User user = new User(username, password);
+            RequestEntity authRequest = RequestEntity.create("auth", "").payload(user);
+            this.initedUser = user;
+            response = sendAndReceive(authRequest);
+        } while (response.getExitCode() == 401);
     }
 }

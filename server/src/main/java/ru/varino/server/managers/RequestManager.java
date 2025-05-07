@@ -25,7 +25,7 @@ public class RequestManager {
         String commandReq = req.getCommand();
         if ("auth".equals(commandReq)) {
             User user = (User) req.getPayload();
-            if (userService.findByUsername(user.getUsername()).isPresent() && userService.checkPassword(user, user.getPassword())) {
+            if (userService.findByUsername(user.getUsername()).isPresent() && !userService.checkPassword(user, user.getPassword())) {
                 return ResponseEntity.unauthorized().body("Пароль введен неверно.");
             }
             if (userService.findByUsernamePassword(user.getUsername(), PasswordUtil.hashPassword(user.getPassword())).isPresent()) {

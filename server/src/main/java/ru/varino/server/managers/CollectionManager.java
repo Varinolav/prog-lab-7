@@ -9,6 +9,8 @@ import ru.varino.server.db.service.MovieService;
 import ru.varino.server.db.service.UserService;
 
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -19,10 +21,12 @@ public class CollectionManager {
     private final Date creationDate;
     private final MovieService movieService;
     private final UserService userService;
+    private final Lock locker;
 
     public CollectionManager(MovieService movieService, UserService userService) {
         collection = new DatabaseMap(movieService);
         creationDate = new Date();
+        this.locker = new ReentrantLock();
         this.movieService = movieService;
         this.userService = userService;
     }
@@ -79,36 +83,56 @@ public class CollectionManager {
     }
 
     public void addElementToCollection(Integer id, Movie movie, Object payload) throws NotEnoughRightsException {
-        var userId = userService.findByUsername(((User) payload).getUsername()).get().getId();
-        if (collection.get(id) != null & movie.getOwnerId() != userId) {
-            throw new NotEnoughRightsException();
+        locker.lock();
+        try {
+            var userId = userService.findByUsername(((User) payload).getUsername()).get().getId();
+            if (collection.get(id) != null & movie.getOwnerId() != userId) {
+                throw new NotEnoughRightsException();
+            }
+            movie.setOwnerId(userId);
+            collection.put(id, movie);
+        } finally {
+            locker.unlock();
         }
-        movie.setOwnerId(userId);
-        collection.put(id, movie);
-
     }
 
     public Collection<Movie> getElements() {
-        return collection.values();
-    }
-
-    public Set<Integer> getElementsIds() {
-        return collection.keySet();
+        locker.lock();
+        try {
+            return collection.values();
+        } finally {
+            locker.unlock();
+        }
     }
 
     public void removeElementFromCollection(Integer id, Object payload) throws NotEnoughRightsException {
-        var userId = userService.findByUsername(((User) payload).getUsername()).get().getId();
-        Movie movie = collection.get(id);
-        if (movie.getOwnerId() != userId) throw new NotEnoughRightsException();
-        collection.remove(id);
+        locker.lock();
+        try {
+            var userId = userService.findByUsername(((User) payload).getUsername()).get().getId();
+            Movie movie = collection.get(id);
+            if (movie.getOwnerId() != userId) throw new NotEnoughRightsException();
+            collection.remove(id);
+        } finally {
+            locker.unlock();
+        }
     }
 
     public void clearCollection() {
-        collection.clear();
+        locker.lock();
+        try {
+            collection.clear();
+        } finally {
+            locker.unlock();
+        }
     }
 
     public Movie getElementById(Integer id) {
-        return collection.get(id);
+        locker.lock();
+        try {
+            return collection.get(id);
+        } finally {
+            locker.unlock();
+        }
     }
 
     public void load() {
